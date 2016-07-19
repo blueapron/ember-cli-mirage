@@ -289,8 +289,23 @@ export default class Server {
   shutdown() {
     this.pretender.shutdown();
     if (this.environment === 'test') {
+      this._resetHasManyAssociations();
       window.server = undefined;
     }
+  }
+
+  _resetHasManyAssociations() {
+    Object.keys(this.schema._registry).forEach((modelKey)=> {
+      if (this.schema._registry[modelKey].class) {
+        this._removeCachedChildren(this.schema._registry[modelKey].class.prototype.hasManyAssociations);
+      }
+    });
+  }
+
+  _removeCachedChildren(hasManyAssociations) {
+    Object.keys(hasManyAssociations).forEach((hasMany)=> {
+      hasManyAssociations[hasMany]._cachedChildren = null;
+    });
   }
 
   _defineRouteHandlerHelpers() {
